@@ -1,0 +1,9 @@
+﻿.name-of-hospital {
+    color: black;
+
+    &:hover,
+    &.active {
+        color: black;
+        cursor: pointer;
+    }
+}

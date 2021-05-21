@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using LikarKrapkaCom.Models;
+using LikarKrapkaComEntities.Models;
 
-namespace LikarKrapkaCom.Controllers
+namespace LikarKrapkaComAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -21,35 +21,58 @@ namespace LikarKrapkaCom.Controllers
         }
 
         // GET: api/Doctors
-        [HttpGet]
+        [HttpGet("GetDoctors")]
+        [ProducesResponseType(200, Type = typeof(Doctor))]
         public async Task<ActionResult<IEnumerable<Doctor>>> GetDoctors()
         {
-            return await _context.Doctors.ToListAsync();
+            var doctors = await _context.Doctors.ToListAsync();
+            return Ok(new List<Doctor>(doctors));
+        }
+
+        [HttpGet("GetDoctorsByHospitalId/{id}")]
+        [ProducesResponseType(200, Type = typeof(Doctor))]
+        public async Task<ActionResult<IEnumerable<Doctor>>> GetDoctorsByHospitalId(int Id)
+        {
+            var doctors =  await _context.Doctors.Where(d => d.HospitalId == Id).ToListAsync();
+            return Ok(new List<Doctor>(doctors));
+        }
+        [HttpGet("GetDoctorsBySpecializationId/{id}")]
+        [ProducesResponseType(200, Type = typeof(Doctor))]
+        public async Task<ActionResult<IEnumerable<Doctor>>> GetDoctorsBySpecializationId(int Id)
+        {
+            var doctors =  await _context.Doctors.Where(d => d.SpecializationId == Id).ToListAsync();
+            return Ok(new List<Doctor>(doctors));
+        }
+         [HttpGet("GetDoctorsByOfficeId/{id}")]
+        [ProducesResponseType(200, Type = typeof(Doctor))]
+        public async Task<ActionResult<IEnumerable<Doctor>>> GetDoctorsByOfficeId(int Id)
+        {
+            var doctors =  await _context.Doctors.Where(d => d.OfficeId == Id).ToListAsync();
+            return Ok(new List<Doctor>(doctors));
         }
 
         // GET: api/Doctors/5
-        [HttpGet("{id}")]
+        [HttpGet("GetDoctor/{id}")]
+        [ProducesResponseType(200, Type = typeof(Doctor))]
         public async Task<ActionResult<Doctor>> GetDoctor(int id)
         {
             var doctor = await _context.Doctors.FindAsync(id);
 
             if (doctor == null)
             {
-                return NotFound();
+                return BadRequest();
             }
 
-            return doctor;
+            return Ok(doctor);
         }
 
         // PUT: api/Doctors/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutDoctor(int id, Doctor doctor)
+        [HttpPut("UpdateDoctor")]
+        [ProducesResponseType(200)]
+        public async Task<IActionResult> PutDoctor( Doctor doctor)
         {
-            if (id != doctor.Id)
-            {
-                return BadRequest();
-            }
+            if (_context.Doctors.Where(d => d.FirstName == doctor.FirstName && d.SpecializationId == doctor.SpecializationId && doctor.LastName == d.LastName && d.PhoneNumber == doctor.PhoneNumber && d.OfficeId == doctor.OfficeId && d.HospitalId == doctor.HospitalId && d.Id != doctor.Id).ToList().Count != 0) return BadRequest();
 
             _context.Entry(doctor).State = EntityState.Modified;
 
@@ -59,7 +82,7 @@ namespace LikarKrapkaCom.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!DoctorExists(id))
+                if (!DoctorExists(doctor.Id))
                 {
                     return NotFound();
                 }
@@ -69,14 +92,17 @@ namespace LikarKrapkaCom.Controllers
                 }
             }
 
-            return NoContent();
+            return Ok();
         }
 
         // POST: api/Doctors
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
+        [HttpPost("InsertDoctor")]
+        [ProducesResponseType(200)]
         public async Task<ActionResult<Doctor>> PostDoctor(Doctor doctor)
         {
+            if (_context.Doctors.Where(d => d.FirstName == doctor.FirstName && d.SpecializationId == doctor.SpecializationId && doctor.LastName == d.LastName && d.PhoneNumber == doctor.PhoneNumber && d.OfficeId == doctor.OfficeId && d.HospitalId == doctor.HospitalId).ToList().Count != 0) return BadRequest();
+
             _context.Doctors.Add(doctor);
             await _context.SaveChangesAsync();
 
@@ -84,19 +110,21 @@ namespace LikarKrapkaCom.Controllers
         }
 
         // DELETE: api/Doctors/5
-        [HttpDelete("{id}")]
+        [HttpDelete("DeleteDoctor/{id}")]
+        [ProducesResponseType(200)]
         public async Task<IActionResult> DeleteDoctor(int id)
         {
             var doctor = await _context.Doctors.FindAsync(id);
-            if (doctor == null)
+            var records = _context.Records.Where(r => r.DoctorId == id).ToList();
+            if (records.Count != 0)
             {
-                return NotFound();
+                return BadRequest();
             }
 
             _context.Doctors.Remove(doctor);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok();
         }
 
         private bool DoctorExists(int id)

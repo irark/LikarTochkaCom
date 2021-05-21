@@ -1,0 +1,113 @@
+﻿@page "/doctors/{hospitalId:int}/{specializationId:int}/{officeId:int}"
+@namespace LikarKrapkaComUI.Pages
+@using LikarKrapkaComEntities.Models
+@using DevExpress.Blazor
+
+<DxDataGrid  @ref="@grid"
+            Data="@doctors"
+            PageSize="5"
+            ShowFilterRow="false"
+            RowRemovingAsync="@OnRowRemoving"
+            RowEditStart="@(dataItem => OnRowEditStarting(dataItem))"
+            RowInsertStart="@(() => OnRowEditStarting(null))"
+            CssClass="MainGrid">
+
+    <Columns>
+        <DxDataGridCommandColumn>
+            <HeaderCellTemplate>
+                <a class="oi oi-plus" @onclick="@(() => grid.StartRowEdit(null))" href="javascript:void(0);"></a>
+            </HeaderCellTemplate>
+            <CellTemplate>
+                <a class="oi oi-pencil" @onclick="@(() => grid.StartRowEdit(context))" href="javascript:void(0);"></a>
+                <a class="oi oi-x" @onclick="@(() => OnRowRemoving(context as Doctor))" href="javascript:void(0);"></a>
+            </CellTemplate>
+        </DxDataGridCommandColumn>
+        <DxDataGridColumn Field="@nameof(Doctor.FirstName)" Caption="Ім'я">
+            <DisplayTemplate Context="item">
+                <a class="name-of-doctor" @onclick="@(()=>GoToDoctorInfo(item as Doctor))" href="">@((item as Doctor).FirstName) @((item as Doctor).LastName)</a>
+            </DisplayTemplate>
+        </DxDataGridColumn>
+        <DxDataGridColumn Field="@nameof(Doctor.PhoneNumber)" Caption="Номер телефону" />
+        <DxDataGridComboBoxColumn Field="@nameof(Doctor.SpecializationId)"
+                                  Caption="Спеціалізація"
+                                  DataAsync="@GetListOfSpecializations"
+                                  TextFieldName="@nameof(Specialization.Name)"
+                                  ValueFieldName="@nameof(Specialization.Id)" />
+        <DxDataGridComboBoxColumn Field="@nameof(Doctor.OfficeId)"
+                                  Caption="Кабінет"
+                                  DataAsync="@GetListOfOffices"
+                                  TextFieldName="@nameof(Office.Name)"
+                                  ValueFieldName="@nameof(Office.Id)" />
+        <DxDataGridComboBoxColumn Field="@nameof(Doctor.HospitalId)"
+                                  Caption="Лікарня"
+                                  DataAsync="@GetListOfHospitals"
+                                  TextFieldName="@nameof(Hospital.Name)"
+                                  ValueFieldName="@nameof(Hospital.Id)" />
+    </Columns>
+    <EditFormTemplate>
+        <EditForm Model="@EditContext" Context="DoctorViewModel" OnValidSubmit="@HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <DxFormLayout>
+                <DxFormLayoutItem Caption="Ім'я:" ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <DxTextBox @bind-Text="@EditContext.FirstName" />
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Прізвище:" ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <DxTextBox @bind-Text="@EditContext.LastName" />
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Номер телефону:" ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <DxTextBox @bind-Text="@EditContext.PhoneNumber" />
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Кабінет:" ColSpanMd="6" Context="FormLayoutContext">
+                    <Template>
+                        <DxComboBox DataAsync="@GetListOfOffices"
+                                    NullText="Select..."
+                                    @bind-Value="@EditContext.OfficeId"
+                                    TextFieldName="@nameof(Office.Name)"
+                                    ValueFieldName="@nameof(Office.Id)">
+                        </DxComboBox>
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Лікарня:" ColSpanMd="6" Context="FormLayoutContext">
+                    <Template>
+                        <DxComboBox DataAsync="@GetListOfHospitals"
+                                    NullText="Select..."
+                                    @bind-Value="@EditContext.HospitalId"
+                                    TextFieldName="@nameof(Hospital.Name)"
+                                    ValueFieldName="@nameof(Hospital.Id)">
+                        </DxComboBox>
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Спеціалізація:" ColSpanMd="6" Context="FormLayoutContext">
+                    <Template>
+                        <DxComboBox DataAsync="@GetListOfSpecializations"
+                                    NullText="Select..."
+                                    @bind-Value="@EditContext.SpecializationId"
+                                    TextFieldName="@nameof(Specialization.Name)"
+                                    ValueFieldName="@nameof(Specialization.Id)">
+                        </DxComboBox>
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <ValidationSummary />
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <div class="text-right">
+                            <DxButton RenderStyle="ButtonRenderStyle.Link" SubmitFormOnClick="true" Text="Зберегти" />
+                            <DxButton RenderStyle="ButtonRenderStyle.Link" Click="OnCancelButtonClick" Text="Скасувати" />
+                        </div>
+                    </Template>
+                </DxFormLayoutItem>
+            </DxFormLayout>
+        </EditForm>
+    </EditFormTemplate>
+</DxDataGrid>
+

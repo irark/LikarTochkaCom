@@ -5,52 +5,57 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using LikarKrapkaCom.Models;
+using LikarKrapkaComEntities.Models;
+using LikarKrapkaComEntities.ViewModel;
 
-namespace LikarKrapkaCom.Controllers
+namespace LikarKrapkaComAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class HospitalsController : ControllerBase
     {
         private readonly DBDoctorsContext _context;
+        private readonly ServerHub _serverHub;
 
-        public HospitalsController(DBDoctorsContext context)
+        public HospitalsController(DBDoctorsContext context, ServerHub serverHub)
         {
             _context = context;
+            _serverHub = serverHub;
         }
 
         // GET: api/Hospitals
-        [HttpGet]
+        [HttpGet("GetHospitals")]
+        [ProducesResponseType(200, Type = typeof(Hospital))]
         public async Task<ActionResult<IEnumerable<Hospital>>> GetHospitals()
         {
-            return await _context.Hospitals.ToListAsync();
+            var hospitals =  await _context.Hospitals.ToListAsync();
+            return Ok(new List<Hospital>(hospitals));
         }
 
         // GET: api/Hospitals/5
-        [HttpGet("{id}")]
+        [HttpGet("GetHospital/{id}")]
+        [ProducesResponseType(200, Type = typeof(Hospital))]
         public async Task<ActionResult<Hospital>> GetHospital(int id)
         {
             var hospital = await _context.Hospitals.FindAsync(id);
 
             if (hospital == null)
             {
-                return NotFound();
+                return BadRequest();
             }
 
-            return hospital;
+            return Ok(hospital);
         }
 
         // PUT: api/Hospitals/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutHospital(int id, Hospital hospital)
+        [HttpPut("UpdateHospital")]
+        [ProducesResponseType(200)]
+        public async Task<IActionResult> PutHospital( Hospital hospital)
         {
-            if (id != hospital.Id)
-            {
-                return BadRequest();
-            }
+            var hospitals = _context.Hospitals.Where(h => h.Name == hospital.Name && h.Address == hospital.Address && h.Id != hospital.Id).ToList();
 
+            if (hospitals.Count != 0) return BadRequest();
             _context.Entry(hospital).State = EntityState.Modified;
 
             try
@@ -59,7 +64,7 @@ namespace LikarKrapkaCom.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!HospitalExists(id))
+                if (!HospitalExists(hospital.Id))
                 {
                     return NotFound();
                 }
@@ -69,14 +74,17 @@ namespace LikarKrapkaCom.Controllers
                 }
             }
 
-            return NoContent();
+            return Ok();
         }
 
         // POST: api/Hospitals
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
+        [HttpPost("InsertHospital")]
+        [ProducesResponseType(200)]
         public async Task<ActionResult<Hospital>> PostHospital(Hospital hospital)
         {
+            if (_context.Hospitals.Where(h => h.Name == hospital.Name && h.Address == hospital.Address).ToList().Count != 0) return BadRequest();
+
             _context.Hospitals.Add(hospital);
             await _context.SaveChangesAsync();
 
@@ -85,18 +93,21 @@ namespace LikarKrapkaCom.Controllers
 
         // DELETE: api/Hospitals/5
         [HttpDelete("{id}")]
+
+        [ProducesResponseType(200)]
         public async Task<IActionResult> DeleteHospital(int id)
         {
             var hospital = await _context.Hospitals.FindAsync(id);
-            if (hospital == null)
+            var doctors =  _context.Doctors.Where(d => d.HospitalId == id).Select(d => d.Id).ToList();
+            if (doctors.Count != 0)
             {
-                return NotFound();
+                return BadRequest();
             }
 
             _context.Hospitals.Remove(hospital);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok();
         }
 
         private bool HospitalExists(int id)

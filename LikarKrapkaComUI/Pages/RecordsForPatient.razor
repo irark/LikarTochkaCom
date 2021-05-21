@@ -1,0 +1,89 @@
+﻿@page "/recordsForPatient/{patientId:int}"
+@namespace LikarKrapkaComUI.Pages
+@using LikarKrapkaComEntities.Models
+@using LikarKrapkaComEntities.ViewModel
+@using DevExpress.Blazor
+
+<DxDataGrid @ref="@grid"
+            Data="@records"
+            PageSize="5"
+            ShowFilterRow="false"
+            RowRemovingAsync="@OnRowRemoving"
+            RowEditStart="@(dataItem => OnRowEditStarting(dataItem))"
+            RowInsertStart="@(() => OnRowEditStarting(null))"
+            CssClass="MainGrid">
+
+    <Columns>
+        <DxDataGridCommandColumn>
+            <HeaderCellTemplate>
+                <a class="oi oi-plus" @onclick="@(() => grid.StartRowEdit(null))" href="javascript:void(0);"></a>
+            </HeaderCellTemplate>
+            <CellTemplate>
+                <a class="oi oi-pencil" @onclick="@(() => grid.StartRowEdit(context))" href="javascript:void(0);"></a>
+                <a class="oi oi-x" @onclick="@(() => OnRowRemoving(context as Record))" href="javascript:void(0);"></a>
+            </CellTemplate>
+        </DxDataGridCommandColumn>
+        <DxDataGridComboBoxColumn Field="@nameof(Record.DoctorId)"
+            Caption="Лікар"
+            DataAsync="@GetListOfDoctors"
+            TextFieldName="@nameof(PersonList.Name)"
+            ValueFieldName="@nameof(PersonList.Id)" />
+       <DxDataGridDateEditColumn Field="@nameof(Record.Date)" Caption="Дата" DisplayFormat="F" />
+       
+        <DxDataGridColumn Field="@nameof(Record.Note)" Caption="Коментар" />
+
+    </Columns>
+    <EditFormTemplate>
+        <EditForm Model="@EditContext" Context="RecordViewModel" OnValidSubmit="@HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <DxFormLayout>
+
+                <DxFormLayoutItem Caption="Лікар:" ColSpanMd="6" Context="FormLayoutContext">
+                        <Template>
+                            <DxComboBox DataAsync="@GetListOfDoctors"
+                                        NullText="Select..."
+                                        @bind-Value="@EditContext.DoctorId"
+                                        TextFieldName="@nameof(Office.Name)"
+                                        ValueFieldName="@nameof(Office.Id)">
+                            </DxComboBox>
+                        </Template>
+                    </DxFormLayoutItem>
+                
+                <DxFormLayoutItem Caption="Дата:" ColSpanMd="6" Context="FormLayoutContext">
+                    <Template>
+                        <DxDateEdit @bind-Date="@EditContext.Date"
+                                    CustomDisabledDate="@OnCustomDisabledDates"
+                                    MinDate="@(DateTime.Now)"
+                                    DisplayFormat="F"
+                                    Format="f"
+                                    MaxDate="@(DateTime.Now.AddDays(7))"
+                                    TimeSectionVisible="true">
+
+                        </DxDateEdit>
+                       
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Коментар:" ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <DxTextBox @bind-Text="@EditContext.Note" />
+                    </Template>
+                </DxFormLayoutItem>
+
+                <DxFormLayoutItem ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <ValidationSummary />
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <div class="text-right">
+                            <DxButton RenderStyle="ButtonRenderStyle.Link" SubmitFormOnClick="true" Text="Зберегти" />
+                            <DxButton RenderStyle="ButtonRenderStyle.Link" Click="OnCancelButtonClick" Text="Скасувати" />
+                        </div>
+                    </Template>
+                </DxFormLayoutItem>
+            </DxFormLayout>
+        </EditForm>
+    </EditFormTemplate>
+</DxDataGrid>
+

@@ -1,0 +1,70 @@
+﻿@page "/patients"
+@namespace LikarKrapkaComUI.Pages
+@using LikarKrapkaComEntities.Models
+@using DevExpress.Blazor
+
+<DxDataGrid @ref="@grid"
+            Data="@patients"
+            PageSize="5"
+            ShowFilterRow="false"
+            RowRemovingAsync="@OnRowRemoving"
+            RowEditStart="@(dataItem => OnRowEditStarting(dataItem))"
+            RowInsertStart="@(() => OnRowEditStarting(null))"
+            CssClass="MainGrid">
+
+    <Columns>
+        <DxDataGridCommandColumn>
+            <HeaderCellTemplate>
+                <a class="oi oi-plus" @onclick="@(() => grid.StartRowEdit(null))" href="javascript:void(0);"></a>
+            </HeaderCellTemplate>
+            <CellTemplate>
+                <a class="oi oi-pencil" @onclick="@(() => grid.StartRowEdit(context))" href="javascript:void(0);"></a>
+                <a class="oi oi-x" @onclick="@(() => OnRowRemoving(context as Patient))" href="javascript:void(0);"></a>
+            </CellTemplate>
+        </DxDataGridCommandColumn>
+        <DxDataGridColumn Field="@nameof(Patient.FirstName)" Caption="Ім'я">
+            <DisplayTemplate Context="item">
+                <a class="name-of-patient" @onclick="@(()=>GoToPatientInfo(item as Patient))" href="">@((item as Patient).FirstName) @((item as Patient).LastName)</a>
+            </DisplayTemplate>
+        </DxDataGridColumn>
+        <DxDataGridColumn Field="@nameof(Patient.PhoneNumber)" Caption="Номер телефону" />
+        
+    </Columns>
+    <EditFormTemplate>
+        <EditForm Model="@EditContext" Context="PatientViewModel" OnValidSubmit="@HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <DxFormLayout>
+                <DxFormLayoutItem Caption="Ім'я:" ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <DxTextBox @bind-Text="@EditContext.FirstName" />
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Прізвище:" ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <DxTextBox @bind-Text="@EditContext.LastName" />
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Номер телефону:" ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <DxTextBox @bind-Text="@EditContext.PhoneNumber" />
+                    </Template>
+                </DxFormLayoutItem>
+                
+                <DxFormLayoutItem ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <ValidationSummary />
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <div class="text-right">
+                            <DxButton RenderStyle="ButtonRenderStyle.Link" SubmitFormOnClick="true" Text="Зберегти" />
+                            <DxButton RenderStyle="ButtonRenderStyle.Link" Click="OnCancelButtonClick" Text="Скасувати" />
+                        </div>
+                    </Template>
+                </DxFormLayoutItem>
+            </DxFormLayout>
+        </EditForm>
+    </EditFormTemplate>
+</DxDataGrid>
+

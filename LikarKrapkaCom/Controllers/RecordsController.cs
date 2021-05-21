@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using LikarKrapkaCom.Models;
+using LikarKrapkaComEntities.Models;
 
-namespace LikarKrapkaCom.Controllers
+namespace LikarKrapkaComAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -20,36 +20,78 @@ namespace LikarKrapkaCom.Controllers
             _context = context;
         }
 
-        // GET: api/Records
-        [HttpGet]
+        [HttpGet("GetRecords")]
+        [ProducesResponseType(200, Type = typeof(Record))]
         public async Task<ActionResult<IEnumerable<Record>>> GetRecords()
         {
-            return await _context.Records.ToListAsync();
+            var @records = await _context.Records.ToListAsync();
+            return Ok(new List<Record>(@records));
         }
 
+
         // GET: api/Records/5
-        [HttpGet("{id}")]
+        [HttpGet("GetRecord/{id}")]
+        [ProducesResponseType(200, Type = typeof(Record))]
         public async Task<ActionResult<Record>> GetRecord(int id)
         {
             var @record = await _context.Records.FindAsync(id);
 
             if (@record == null)
             {
-                return NotFound();
-            }
-
-            return @record;
-        }
-
-        // PUT: api/Records/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutRecord(int id, Record @record)
-        {
-            if (id != @record.Id)
-            {
                 return BadRequest();
             }
+
+            return Ok(@record);
+        }
+        [HttpGet("GetRecordsByDoctorId/{id}")]
+        [ProducesResponseType(200, Type = typeof(Record))]
+        public async Task<ActionResult<IEnumerable<Record>>> GetRecordsByDoctorId(int id)
+        {
+            var @records = await _context.Records.Where(r => r.DoctorId == id).ToListAsync();
+            return Ok(new List<Record>(@records));
+        }
+        [HttpGet("GetRecordsByPatientId/{id}")]
+        [ProducesResponseType(200, Type = typeof(Record))]
+        public async Task<ActionResult<IEnumerable<Record>>> GetRecordsByPatientId(int id)
+        {
+            var @records = await _context.Records.Where(r => r.PatientId == id).ToListAsync();
+            return Ok(new List<Record>(@records));
+        }
+        [HttpGet("GetDateForDoctor/{id}")]
+        [ProducesResponseType(200, Type = typeof(DateTime))]
+        public async Task<ActionResult<DateTime>> GetDateForDoctor(int id)
+        {
+            var dates = await _context.Records.Where(r => r.DoctorId == id).Select(r => r.Date).ToListAsync();
+
+            if (dates == null)
+            {
+                dates = new List<DateTime?>();
+            }
+
+            return Ok(dates);
+        }
+        [HttpGet("GetDateForPatient/{id}")]
+        [ProducesResponseType(200, Type = typeof(DateTime))]
+        public async Task<ActionResult<DateTime>> GetDateForPatient(int id)
+        {
+            var dates = await _context.Records.Where(r => r.PatientId == id).Select(r => r.Date).ToListAsync();
+
+            if (dates == null)
+            {
+                dates = new List<DateTime?>();
+            }
+
+            return Ok(dates);
+        }
+        // PUT: api/Records/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("UpdateRecord")]
+        [ProducesResponseType(200)]
+        public async Task<IActionResult> PutRecord(Record @record)
+        {
+
+            if (_context.Records.Where(r => r.PatientId == @record.PatientId && r.DoctorId == record.DoctorId && r.Date == record.Date && r.Id != @record.Id).ToList().Count != 0) return BadRequest();
+
 
             _context.Entry(@record).State = EntityState.Modified;
 
@@ -59,7 +101,7 @@ namespace LikarKrapkaCom.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!RecordExists(id))
+                if (!RecordExists(@record.Id))
                 {
                     return NotFound();
                 }
@@ -69,14 +111,16 @@ namespace LikarKrapkaCom.Controllers
                 }
             }
 
-            return NoContent();
+            return Ok();
         }
 
         // POST: api/Records
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
+        [HttpPost("InsertRecord")]
         public async Task<ActionResult<Record>> PostRecord(Record @record)
         {
+            if (_context.Records.Where(r => r.PatientId == @record.PatientId && r.DoctorId == record.DoctorId && r.Date == record.Date).ToList().Count != 0) return BadRequest();
+
             _context.Records.Add(@record);
             await _context.SaveChangesAsync();
 
@@ -84,7 +128,7 @@ namespace LikarKrapkaCom.Controllers
         }
 
         // DELETE: api/Records/5
-        [HttpDelete("{id}")]
+        [HttpDelete("DeleteRecord/{id}")]
         public async Task<IActionResult> DeleteRecord(int id)
         {
             var @record = await _context.Records.FindAsync(id);

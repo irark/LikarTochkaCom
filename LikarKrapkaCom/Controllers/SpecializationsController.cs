@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using LikarKrapkaCom.Models;
+using LikarKrapkaComEntities.Models;
 
-namespace LikarKrapkaCom.Controllers
+namespace LikarKrapkaComAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -21,35 +21,37 @@ namespace LikarKrapkaCom.Controllers
         }
 
         // GET: api/Specializations
-        [HttpGet]
+        [HttpGet("GetSpecializations")]
+        [ProducesResponseType(200, Type = typeof(Specialization))]
         public async Task<ActionResult<IEnumerable<Specialization>>> GetSpecializations()
         {
-            return await _context.Specializations.ToListAsync();
+            var specializations = await _context.Specializations.ToListAsync();
+            return Ok(new List<Specialization>(specializations));
         }
 
         // GET: api/Specializations/5
-        [HttpGet("{id}")]
+        [HttpGet("GetSpecialization/{id}")]
+        [ProducesResponseType(200, Type = typeof(Specialization))]
         public async Task<ActionResult<Specialization>> GetSpecialization(int id)
         {
             var specialization = await _context.Specializations.FindAsync(id);
 
             if (specialization == null)
             {
-                return NotFound();
+                return BadRequest();
             }
 
-            return specialization;
+            return Ok(specialization);
         }
 
         // PUT: api/Specializations/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutSpecialization(int id, Specialization specialization)
+        [HttpPut("UpdateSpecialization")]
+        [ProducesResponseType(200)]
+        public async Task<IActionResult> PutSpecialization(Specialization specialization)
         {
-            if (id != specialization.Id)
-            {
-                return BadRequest();
-            }
+            if (_context.Specializations.Where(d => d.Name == specialization.Name && d.Id != specialization.Id).ToList().Count != 0) return BadRequest();
+
 
             _context.Entry(specialization).State = EntityState.Modified;
 
@@ -59,7 +61,7 @@ namespace LikarKrapkaCom.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!SpecializationExists(id))
+                if (!SpecializationExists(specialization.Id))
                 {
                     return NotFound();
                 }
@@ -69,14 +71,17 @@ namespace LikarKrapkaCom.Controllers
                 }
             }
 
-            return NoContent();
+            return Ok();
         }
 
         // POST: api/Specializations
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
+        [HttpPost("InsertSpecialization")]
+        [ProducesResponseType(200)]
         public async Task<ActionResult<Specialization>> PostSpecialization(Specialization specialization)
         {
+            if (_context.Specializations.Where(d => d.Name == specialization.Name).ToList().Count != 0) return BadRequest();
+
             _context.Specializations.Add(specialization);
             await _context.SaveChangesAsync();
 
@@ -84,19 +89,20 @@ namespace LikarKrapkaCom.Controllers
         }
 
         // DELETE: api/Specializations/5
-        [HttpDelete("{id}")]
+        [HttpDelete("DeleteSpecialization/{id}")]
         public async Task<IActionResult> DeleteSpecialization(int id)
         {
             var specialization = await _context.Specializations.FindAsync(id);
-            if (specialization == null)
+            var doctors = await _context.Doctors.Where(d => d.SpecializationId == id).ToListAsync();
+            if (doctors.Count != 0)
             {
-                return NotFound();
+                return BadRequest();
             }
 
             _context.Specializations.Remove(specialization);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok();
         }
 
         private bool SpecializationExists(int id)

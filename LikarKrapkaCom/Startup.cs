@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using LikarKrapkaCom.Models;
+using LikarKrapkaComEntities.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.ResponseCompression;
 
-namespace LikarKrapkaCom
+namespace LikarKrapkaComAPI
 {
     public class Startup
     {
@@ -25,6 +25,9 @@ namespace LikarKrapkaCom
             string connection = Configuration.GetConnectionString("DefaultConnection");
             services.AddDbContext<DBDoctorsContext>(options => options.UseSqlServer(connection));
             services.AddControllers();
+            services.AddSignalR(hubOptions => { hubOptions.MaximumReceiveMessageSize = null; });
+            services.AddSingleton<ServerHub>();
+            services.AddControllers();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -33,15 +36,15 @@ namespace LikarKrapkaCom
             {
                 app.UseDeveloperExceptionPage();
             }
+            app.UseCors("AllowAllOrigins");
             app.UseRouting();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-                endpoints.MapHub<ServerHub>("/serverhub");
+                endpoints.MapHub<ServerHub>("/ServerHub");
             });
             
             app.UseHttpsRedirection();
-            app.UseCors("AllowCors");
             app.UseRouting();
         }
 

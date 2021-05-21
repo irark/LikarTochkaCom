@@ -1,0 +1,63 @@
+﻿@page "/hospitals"
+@namespace LikarKrapkaComUI.Pages
+@using LikarKrapkaComEntities.Models
+@using DevExpress.Blazor
+
+<DxDataGrid @ref="@grid"
+            Data="@hospitals"
+            PageSize="5"
+            ShowFilterRow="false"
+            RowRemovingAsync="@OnRowRemoving"
+            RowEditStart="@(dataItem => OnRowEditStarting(dataItem))"
+            RowInsertStart="@(() => OnRowEditStarting(null))"
+            CssClass="mw-1100">
+    <Columns>
+        
+        <DxDataGridCommandColumn>
+            <HeaderCellTemplate>
+                <a class="oi oi-plus" @onclick="@(() => grid.StartRowEdit(null))" href="javascript:void(0);"></a>
+            </HeaderCellTemplate>
+            <CellTemplate>
+                <a class="oi oi-pencil" @onclick="@(() => grid.StartRowEdit(context))" href="javascript:void(0);"></a>
+                <a class="oi oi-x" @onclick="@(() => OnRowRemoving(context as Hospital))" href="javascript:void(0);"></a>
+            </CellTemplate>
+        </DxDataGridCommandColumn>
+        <DxDataGridColumn Field="@nameof(Hospital.Name)" Caption="Назва">
+            <DisplayTemplate Context="item">
+                <a class="name-of-hospital" @onclick="@(()=>GoToDoctors(item as Hospital))" href="">@((item as Hospital).Name)</a>
+            </DisplayTemplate>
+        </DxDataGridColumn>
+        <DxDataGridColumn Field="@nameof(Hospital.Address)" Caption="Адреса" />
+    </Columns>
+    <EditFormTemplate>
+        <EditForm Model="@EditContext" Context="HospitalViewModel" OnValidSubmit="@HandleValidSubmit" >
+            <DataAnnotationsValidator />
+            <DxFormLayout>
+                <DxFormLayoutItem Caption="Назва:" ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <DxTextBox @bind-Text="@EditContext.Name" />
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Адреса:" ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <DxTextBox @bind-Text="@EditContext.Address" />
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <ValidationSummary />
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem ColSpanMd="12" Context="FormLayoutContext">
+                    <Template>
+                        <div class="text-right">
+                            <DxButton RenderStyle="ButtonRenderStyle.Link" SubmitFormOnClick="true" Text="Зберегти" />
+                            <DxButton RenderStyle="ButtonRenderStyle.Link" Click="OnCancelButtonClick" Text="Скасувати" />
+                        </div>
+                    </Template>
+                </DxFormLayoutItem>
+            </DxFormLayout>
+        </EditForm>
+    </EditFormTemplate>
+</DxDataGrid>
+

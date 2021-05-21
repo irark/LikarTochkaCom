@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  
+  <ItemGroup>
+    <PackageReference Include="Blazored.Toast" Version="3.1.2" />
+    <PackageReference Include="DevExpress.Blazor" Version="20.2.7" />
+    <PackageReference Include="DevExpress.Blazor.ProjectTemplates" Version="20.2.3" />
+    <PackageReference Include="DevExtreme.AspNet.Data" Version="2.8.3" />
+    <PackageReference Include="Humanizer" Version="2.10.1" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="5.0.5" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageReference Include="Righthand.BlazorDevExtreme" Version="0.6.2" />
+    <PackageReference Include="Syncfusion.Grid.Windows" Version="19.1.0.59" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Data\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LikarKrapkaComEntities\LikarKrapkaComEntities.csproj" />
+  </ItemGroup>
+
+</Project>

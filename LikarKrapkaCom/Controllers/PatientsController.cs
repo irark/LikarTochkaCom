@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using LikarKrapkaCom.Models;
+using LikarKrapkaComEntities.Models;
 
-namespace LikarKrapkaCom.Controllers
+namespace LikarKrapkaComAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -21,35 +21,35 @@ namespace LikarKrapkaCom.Controllers
         }
 
         // GET: api/Patients
-        [HttpGet]
+        [HttpGet("GetPatients")]
+        [ProducesResponseType(200, Type = typeof(Patient))]
         public async Task<ActionResult<IEnumerable<Patient>>> GetPatients()
         {
-            return await _context.Patients.ToListAsync();
+            var patients = await _context.Patients.ToListAsync();
+            return Ok(new List<Patient>(patients));
         }
 
         // GET: api/Patients/5
-        [HttpGet("{id}")]
+        [HttpGet("GetPatient/{id}")]
         public async Task<ActionResult<Patient>> GetPatient(int id)
         {
             var patient = await _context.Patients.FindAsync(id);
 
             if (patient == null)
             {
-                return NotFound();
+                return BadRequest();
             }
 
-            return patient;
+            return Ok(patient);
         }
 
         // PUT: api/Patients/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutPatient(int id, Patient patient)
+        [HttpPut("UpdatePatient")]
+        [ProducesResponseType(200)]
+        public async Task<IActionResult> PutPatient(Patient patient)
         {
-            if (id != patient.Id)
-            {
-                return BadRequest();
-            }
+            if (_context.Patients.Where(d => d.FirstName == patient.FirstName &&  patient.LastName == d.LastName && d.PhoneNumber == patient.PhoneNumber && d.Id != patient.Id).ToList().Count != 0) return BadRequest();
 
             _context.Entry(patient).State = EntityState.Modified;
 
@@ -59,7 +59,7 @@ namespace LikarKrapkaCom.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!PatientExists(id))
+                if (!PatientExists(patient.Id))
                 {
                     return NotFound();
                 }
@@ -69,14 +69,16 @@ namespace LikarKrapkaCom.Controllers
                 }
             }
 
-            return NoContent();
+            return Ok();
         }
 
         // POST: api/Patients
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
+        [HttpPost("InsertPatient")]
         public async Task<ActionResult<Patient>> PostPatient(Patient patient)
         {
+            if (_context.Patients.Where(d => d.FirstName == patient.FirstName && patient.LastName == d.LastName && d.PhoneNumber == patient.PhoneNumber).ToList().Count != 0) return BadRequest();
+
             _context.Patients.Add(patient);
             await _context.SaveChangesAsync();
 
@@ -84,19 +86,20 @@ namespace LikarKrapkaCom.Controllers
         }
 
         // DELETE: api/Patients/5
-        [HttpDelete("{id}")]
+        [HttpDelete("DeletePatient/{id}")]
         public async Task<IActionResult> DeletePatient(int id)
         {
             var patient = await _context.Patients.FindAsync(id);
-            if (patient == null)
+            var records = _context.Records.Where(r => r.PatientId == id).ToList();
+            if (records.Count != 0)
             {
-                return NotFound();
+                return BadRequest();
             }
 
             _context.Patients.Remove(patient);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok();
         }
 
         private bool PatientExists(int id)
